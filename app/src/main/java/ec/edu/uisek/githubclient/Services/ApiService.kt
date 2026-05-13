@@ -1,7 +1,10 @@
 package ec.edu.uisek.githubclient.services
 import androidx.compose.ui.text.style.TextDirection
 import ec.edu.uisek.githubclient.models.Repository
+import ec.edu.uisek.githubclient.models.RepositoryPayload
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface ApiService {
@@ -9,7 +12,12 @@ interface ApiService {
     suspend fun getRepository (
         @Query("sort") sort: String = "Created",
         @Query("direction") direction: String = "desc",
-        @Query("affiliation") afiliation: String = "owner",
+        @Query("affiliation") affiliation: String = "owner",
         @Query("t") t: String = "${System.currentTimeMillis()}"
     ): List<Repository>
+
+    @POST("user/repos")
+    suspend fun createRepository (
+        @Body payload: RepositoryPayload
+    ): Repository
 }
