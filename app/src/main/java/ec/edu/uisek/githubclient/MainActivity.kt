@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ec.edu.uisek.githubclient.models.Repository
 import ec.edu.uisek.githubclient.ui.screens.RepoForm
 import ec.edu.uisek.githubclient.ui.screens.RepoList
 import ec.edu.uisek.githubclient.ui.theme.GithubClientTheme
@@ -23,14 +24,21 @@ class MainActivity : ComponentActivity() {
             GithubClientTheme {
                 val listViewModel: RepoListViewModel= viewModel ()
                 var currentScreen by remember { mutableStateOf("repoList") }
+                var selectedRepo by remember { mutableStateOf<Repository?>(null) }
+
                 when (currentScreen) {
                     "repoList" -> RepoList (
-                        onNavigateToForm = { currentScreen = "repoForm" }
+                        onNavigateToForm = { repo ->
+                            selectedRepo = repo
+                            currentScreen = "repoForm"
+                        }
                     )
                     "repoForm" -> RepoForm(
+                        repoToEdit = selectedRepo,
                         onSaveSuccess = {
                             listViewModel.fetchRepos()
-                            currentScreen = "repoList" },
+                            currentScreen = "repoList"
+                        },
                         onBackClick = { currentScreen = "repoList" }
                     )
                 }

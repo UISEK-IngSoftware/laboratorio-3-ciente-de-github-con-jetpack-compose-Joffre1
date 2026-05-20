@@ -2,7 +2,6 @@ package ec.edu.uisek.githubclient.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import ec.edu.uisek.githubclient.models.Repository
 import ec.edu.uisek.githubclientcompose.services.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class RepoListViewModel: ViewModel(){
+class
+
+RepoListViewModel: ViewModel(){
     //Maneja el estado de la lista de repositorios
     private val _repos = MutableStateFlow<List<Repository>>(emptyList())
     val repos : StateFlow<List<Repository>> = _repos.asStateFlow()
@@ -36,6 +37,21 @@ class RepoListViewModel: ViewModel(){
                 _errorMsg.value = "Error al cargar los respositorios: ${e.localizedMessage}"
                 e.printStackTrace()
             }finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun deleteRepository(owner: String, repo: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMsg.value = null
+            try {
+                RetrofitClient.apiService.deleteRepository(owner, repo)
+                fetchRepos() // Recargar la lista
+            } catch (e: Exception) {
+                _errorMsg.value = "Error al eliminar el repositorio: ${e.localizedMessage}"
+            } finally {
                 _isLoading.value = false
             }
         }

@@ -1,6 +1,10 @@
 package ec.edu.uisek.githubclient.models
 
+import com.google.gson.annotations.SerializedName
+
 data class RepositoryPayload(
+    @SerializedName("name")
     val name: String,
-    val description: String?= null,
+    @SerializedName("description")
+    val description: String? = null,
 )

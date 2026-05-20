@@ -30,11 +30,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImagePainter
+import ec.edu.uisek.githubclient.models.Repository
 import ec.edu.uisek.githubclient.ui.viewModels.RepoFormViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepoForm(
+    repoToEdit: Repository? = null,
     onSaveSuccess: () -> Unit = {},
     onBackClick: () -> Unit = {},
     viewModel: RepoFormViewModel = viewModel ()
@@ -44,8 +46,8 @@ fun RepoForm(
     val isSuccess by viewModel.isSuccess.collectAsState()
     val errorMsg by viewModel.errorMsg.collectAsState()
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(repoToEdit?.name ?: "") }
+    var description by remember { mutableStateOf(repoToEdit?.description ?: "") }
 
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
@@ -56,7 +58,7 @@ fun RepoForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Repositorio") },
+                title = { Text(if (repoToEdit == null) "Nuevo Repositorio" else "Editar Repositorio") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -104,18 +106,36 @@ fun RepoForm(
                 )
 
                 Button(
-                    onClick = { viewModel.createRepository(name, description) },
-                    enabled = name.isNotBlank(),
+                    onClick = {
+                        if (repoToEdit == null) {
+                            viewModel.createRepository(name, description)
+                        } else {
+                            viewModel.updateRepository(
+                                owner = repoToEdit.owner.login,
+                                oldName = repoToEdit.name,
+                                newName = name,
+                                description = description
+                            )
+                        }
+                    },
+                    enabled = name.isNotBlank() && !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Guardar Repositorio")
+                    Text(if (repoToEdit == null) "Guardar Repositorio" else "Actualizar Repositorio")
+                }
+
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator()
+                }
+
+                errorMsg?.let {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
     }
 }
-
-// Preview corregido
+// Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
