@@ -1,10 +1,7 @@
-package ec.edu.uisek.githubclientcompose.services
+package ec.edu.uisek.githubclient.services
 
-//import ec.edu.uisek.githubclientcompose.BuildConfig
 import android.content.Context
-import androidx.compose.ui.geometry.isEmpty
 import ec.edu.uisek.githubclient.services.ApiService
-import ec.edu.uisek.githubclient.BuildConfig
 import ec.edu.uisek.githubclient.services.AuthService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -12,7 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://api.github.com"
+    private const val BASE_URL = "https://api.github.com/"
     private lateinit var authService: AuthService
 
     fun init(context: Context) {
@@ -27,17 +24,17 @@ object RetrofitClient {
         OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor { chain ->
+                val originalRequest = chain.request()
                 val token = authService.getToken() ?: ""
 
-                val requestBuilder = chain.request().newBuilder()
-                    .addHeader("Accept", "application/vnd.github+json")
-                    .addHeader("X-GitHub-Api-Version", "2022-11-28")
-                    .addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+                val requestBuilder = originalRequest.newBuilder()
+                    .header("Accept", "application/vnd.github+json")
+                    .header("X-GitHub-Api-Version", "2022-11-28")
+                    // No usamos .addHeader para evitar duplicados, .header reemplaza
+                    .header("Cache-Control", "no-cache, no-store")
 
-                if (token.isNotBlank()) {
-                    // GitHub requiere "Bearer " para PATs modernos o "token " para antiguos.
-                    // "Bearer" es el estándar actual.
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                if (token.isNotEmpty()) {
+                    requestBuilder.header("Authorization", "Bearer $token")
                 }
 
                 chain.proceed(requestBuilder.build())

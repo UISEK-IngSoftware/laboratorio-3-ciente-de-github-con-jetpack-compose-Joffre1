@@ -3,7 +3,7 @@ package ec.edu.uisek.githubclient.ui.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ec.edu.uisek.githubclient.models.Repository
-import ec.edu.uisek.githubclientcompose.services.RetrofitClient
+import ec.edu.uisek.githubclient.services.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

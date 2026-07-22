@@ -9,7 +9,7 @@ class AuthService(context: Context) {
         context.getSharedPreferences("github_prefs", Context.MODE_PRIVATE)
 
     fun saveAuth(username: String, token: String) {
-        sharedPreferences.edit {
+        sharedPreferences.edit(commit = true) {
             putString("username", username.trim())
                 .putString("token", token.trim())
         }

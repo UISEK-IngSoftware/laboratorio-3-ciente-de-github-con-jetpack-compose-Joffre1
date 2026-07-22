@@ -11,6 +11,9 @@
     import retrofit2.http.Query
 
     interface ApiService {
+        @GET("user")
+        suspend fun validateToken(): retrofit2.Response<ec.edu.uisek.githubclient.models.GithubUser>
+
         @GET(value = "user/repos")
         suspend fun getRepository (
             @Query("sort") sort: String = "Created",

@@ -33,7 +33,10 @@ class MainActivity : ComponentActivity() {
 
                 when (currentScreen) {
                     "login" -> LoginForm (
-                        onLoginSuccess = {currentScreen = "repoList"}
+                        onLoginSuccess = {
+                            listViewModel.fetchRepos()
+                            currentScreen = "repoList"
+                        }
 
                     )
                     "repoList" -> RepoList (

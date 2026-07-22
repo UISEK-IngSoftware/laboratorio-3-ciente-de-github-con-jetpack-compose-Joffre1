@@ -21,7 +21,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ec.edu.uisek.githubclient.services.AuthService
+import ec.edu.uisek.githubclient.services.RetrofitClient
 import ec.edu.uisek.githubclient.ui.theme.GithubClientTheme
+
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginForm(
@@ -29,10 +36,14 @@ fun LoginForm(
 ){
 
     val context = LocalContext.current
-    val authService = AuthService(context)
+    val authService = remember { AuthService(context) }
+    val scope = rememberCoroutineScope()
 
     var username by remember { mutableStateOf("") }
     var token by remember { mutableStateOf("") }
+
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column (
         modifier = Modifier
@@ -52,7 +63,8 @@ fun LoginForm(
             onValueChange = { username = it },
             label = { Text("Usuario") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -62,20 +74,63 @@ fun LoginForm(
             label = { Text("Token de GitHub") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            singleLine = true
+            singleLine = true,
+            enabled = !isLoading
         )
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = Color.Red,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                authService.saveAuth(username, token)
-                onLoginSuccess()
+                scope.launch {
+                    isLoading = true
+                    errorMessage = null
+                    authService.saveAuth(username, token)
+
+                    try {
+                        val response = RetrofitClient.apiService.validateToken()
+                        if (response.isSuccessful) {
+                            val githubUser = response.body()
+                            // Validamos que el token pertenezca al usuario ingresado
+                            if (githubUser?.login?.equals(username.trim(), ignoreCase = true) == true) {
+                                onLoginSuccess()
+                            } else {
+                                authService.logout()
+                                errorMessage = "El token pertenece a '${githubUser?.login}', no a '$username'"
+                            }
+                        } else {
+                            authService.logout()
+                            errorMessage = "Token inválido o expirado (Error 401)"
+                        }
+                    } catch (e: Exception) {
+                        authService.logout()
+                        errorMessage = "Error: ${e.localizedMessage ?: "Fallo de conexión"}"
+                    } finally {
+                        isLoading = false
+                    }
+                }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = username.isNotBlank() && token.isNotBlank()
+            enabled = username.isNotBlank() && token.isNotBlank() && !isLoading
         ) {
-            Text(text = "Iniciar Sesión")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(text = "Iniciar Sesión")
+            }
         }
 
     }
